@@ -1,0 +1,44 @@
+---
+- name: Create work dir
+  file:
+    path: /home/ubuntu
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Read tags from /tmp/ecr_tags.json
+  set_fact:
+    ecr_tags: "{{ lookup('file', '/tmp/ecr_tags.json') | from_json }}"
+
+- name: Login to ECR
+  shell: |
+    aws ecr get-login-password --region "{{ aws_region }}" | \
+    docker login --username AWS --password-stdin "{{ ecr_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+  args:
+    executable: /bin/bash
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key_id }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_access_key }}"
+    AWS_REGION: "{{ aws_region }}"
+
+- name: Push image backcore
+  command: docker pull "{{ ecr_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/greencity-backcore:{{ ecr_tags.image_tag_backcore }}"
+  when: ecr_tags.image_tag_backcore is defined
+
+- name: Push image backuser
+  command: docker pull "{{ ecr_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/greencity-backuser:{{ ecr_tags.image_tag_backuser }}"
+  when: ecr_tags.image_tag_backuser is defined
+
+- name: Copy docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: /home/ubuntu/docker-compose.yml
+    owner: ubuntu
+    mode: '0644'
+
+- name: Start backcore and backuser
+  command: docker-compose up -d
+  args:
+    chdir: /home/ubuntu
+  become_user: ubuntu

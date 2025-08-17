@@ -1,0 +1,38 @@
+---
+- name: Debug Vault secrets
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    rds_creds: >-
+      {{
+        lookup('hashi_vault',
+          'secret=secret/data/ansible/rds ' +
+          'token=' + lookup('env', 'VAULT_TOKEN') + ' ' +
+          'url=' + lookup('env', 'VAULT_ADDR') + ' ' +
+          'engine_version=2'
+        )
+      }}
+
+  tasks:
+    - name: Показать тип rds_creds
+      debug:
+        msg: "{{ rds_creds | type_debug }}"
+
+    - name: Показать ключи верхнего уровня rds_creds
+      debug:
+        msg: "{{ rds_creds.keys() | list }}"
+
+    - name: Показать ключи rds_creds.data (если есть)
+      debug:
+        msg: "{{ rds_creds.data.keys() | list }}"
+      when: rds_creds.data is defined
+
+    - name: Показать ключи rds_creds.data.data (если есть)
+      debug:
+        msg: "{{ rds_creds.data.data.keys() | list }}"
+      when: rds_creds.data is defined and rds_creds.data.data is defined
+
+    - name: Показать весь словарь rds_creds (для полной картины)
+      debug:
+        var: rds_creds

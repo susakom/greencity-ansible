@@ -1,0 +1,108 @@
+---
+- name: Получить последние теги из ECR (frontend, backcore, backuser)
+  hosts: localhost
+  gather_facts: no
+  vars:
+
+    # Получаем секреты из Vault
+    aws_creds: >-
+      {{
+        lookup('hashi_vault',
+          'secret=secret/data/ansible/aws ' +
+          'token=' + lookup('env', 'VAULT_TOKEN') + ' ' +
+          'url=' + lookup('env', 'VAULT_ADDR') + ' ' +
+          'engine_version=2'
+        )
+      }}
+
+    # Распаковываем нужные переменные
+    aws_region: "{{ aws_creds.AWS_REGION }}"
+    ecr_account: "{{ aws_creds.ECR_ACCOUNT }}"
+
+
+    repos:
+      frontend: "greencity-frontend"
+      backcore: "greencity-backcore"
+      backuser: "greencity-backuser"
+    output_file: "/tmp/ecr_tags.json"  # Где сохранить теги
+
+  tasks:
+    - name: Получить образы frontend
+      shell: |
+        aws ecr describe-images \
+          --region "{{ aws_region }}" \
+          --repository-name "{{ repos.frontend }}" \
+          --query 'imageDetails[?imageTags != `null`].{Tags: imageTags, Pushed: imagePushedAt}' \
+          --output json
+      register: ecr_frontend_raw
+      no_log: true
+
+    - name: Получить образы backcore
+      shell: |
+        aws ecr describe-images \
+          --region "{{ aws_region }}" \
+          --repository-name "{{ repos.backcore }}" \
+          --query 'imageDetails[?imageTags != `null`].{Tags: imageTags, Pushed: imagePushedAt}' \
+          --output json
+      register: ecr_backcore_raw
+      no_log: true
+
+    - name: Получить образы backuser
+      shell: |
+        aws ecr describe-images \
+          --region "{{ aws_region }}" \
+          --repository-name "{{ repos.backuser }}" \
+          --query 'imageDetails[?imageTags != `null`].{Tags: imageTags, Pushed: imagePushedAt}' \
+          --output json
+      register: ecr_backuser_raw
+      no_log: true
+
+    - name: 🏷️звлечь и отсортировать (frontend)
+      set_fact:
+        frontend_images: "{{ (ecr_frontend_raw.stdout | from_json) | sort(attribute='Pushed', reverse=true) | list }}"
+
+    - name: Извлечь и отсортировать (backcore)
+      set_fact:
+        backcore_images: "{{ (ecr_backcore_raw.stdout | from_json) | sort(attribute='Pushed', reverse=true) | list }}"
+
+    - name: Извлечь и отсортировать (backuser)
+      set_fact:
+        backuser_images: "{{ (ecr_backuser_raw.stdout | from_json) | sort(attribute='Pushed', reverse=true) | list }}"
+
+    - name: Найти последний тег (не latest) для frontend
+      set_fact:
+        image_tag_frontend: "{{ item.Tags.0 }}"
+      loop: "{{ frontend_images }}"
+      when: "'latest' not in item.Tags"
+
+    - name: Найти последний тег (не latest) для backcore
+      set_fact:
+        image_tag_backcore: "{{ item.Tags.0 }}"
+      loop: "{{ backcore_images }}"
+      when: "'latest' not in item.Tags"
+
+    - name: Найти последний тег (не latest) для backuser
+      set_fact:
+        image_tag_backuser: "{{ item.Tags.0 }}"
+      loop: "{{ backuser_images }}"
+      when: "'latest' not in item.Tags"
+
+    - name:  Сохранить теги в файл
+      copy:
+        content: |
+          {
+            "image_tag_frontend": "{{ image_tag_frontend }}",
+            "image_tag_backcore": "{{ image_tag_backcore }}",
+            "image_tag_backuser": "{{ image_tag_backuser }}"
+          }
+        dest: "{{ output_file }}"
+        mode: '0644'
+      when: image_tag_frontend is defined and image_tag_backcore is defined and image_tag_backuser is defined
+
+    - name: Вывести теги (только при -v)
+      debug:
+        msg: |
+          Frontend: {{ image_tag_frontend }}
+          Backcore: {{ image_tag_backcore }}
+          Backuser: {{ image_tag_backuser }}
+      when: image_tag_frontend is defined and ansible_verbosity > 0

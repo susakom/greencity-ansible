@@ -1,0 +1,51 @@
+---
+- name: Path to project 
+  file:
+    path: /home/ubuntu
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Read tags from  tmp ecr_tags.json
+  set_fact:
+    ecr_tags: "{{ lookup('file', '/tmp/ecr_tags.json') | from_json }}"
+  when: inventory_hostname in groups['frontend']
+
+- name: Gererate config.js
+  template:
+    src: config.js.j2
+    dest: /home/ubuntu/config.js
+    owner: ubuntu
+    mode: '0644'
+
+
+- name: Connect to  ECR
+  shell: |
+    aws ecr get-login-password --region "{{ aws_region }}" | \
+    docker login --username AWS --password-stdin "{{ ecr_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+  args:
+    executable: /bin/bash
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key_id }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_access_key }}"
+    AWS_REGION: "{{ aws_region }}"
+
+
+
+- name: Pull frontend image
+  command: docker pull "{{ ecr_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/greencity-frontend:{{ ecr_tags.image_tag_frontend }}"
+  when: ecr_tags.image_tag_frontend is defined
+
+- name: Copy docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: /home/ubuntu/docker-compose.yml
+    owner: ubuntu
+    mode: '0644'
+
+- name: Start frontend
+  command: docker-compose up -d
+  args:
+    chdir: /home/ubuntu
+  become_user: ubuntu

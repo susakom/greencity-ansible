@@ -1,0 +1,38 @@
+
+- name: Check connection to Hashicorp Vault
+  hosts: localhost
+  gather_facts: no
+  environment:
+    VAULT_ADDR: "http://127.0.0.1:8200"
+
+  vars:
+    # Получаем ВЕСЬ секрет из Vault
+    aws_secrets: >-
+      {{
+        lookup('hashi_vault',
+          'secret=secret/data/ansible/aws ' +
+          'token=' + lookup('env', 'VAULT_TOKEN') + ' ' +
+          'url=' + lookup('env', 'VAULT_ADDR') + ' ' +
+          'engine_version=2'
+        )
+      }}
+
+    aws_region: "{{ aws_secrets.AWS_REGION }}"
+    ecr_account: "{{ aws_secrets.ECR.ACCOUNT }}"
+
+  tasks:
+     - name: 🗂 Разложить секреты в алиасы
+       set_fact:
+         aws_region: "{{ aws_secrets.AWS_REGION }}"
+         ecr_account: "{{ aws_secrets.ECR_ACCOUNT }}"
+
+     - name: ✅ Проверим переменные
+       debug:
+
+         msg: "Region={{ aws_region }}, Account={{ ecr_account }}"
+     - name: ✅ Проверим, что EC2 видит переменные
+       command: printenv
+       environment:
+         AWS_REGION: "{{ aws_region }}"
+         ECR_ACCOUNT: "{{ ecr_account }}"
+

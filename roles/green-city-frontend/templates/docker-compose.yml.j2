@@ -1,0 +1,25 @@
+# templates/docker-compose.yml.j2
+version: '3'
+services:
+  frontend:
+    image: "{{ ecr_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/greencity-frontend:{{ ecr_tags.image_tag_frontend }}"
+    
+    volumes:
+      - ./config.js:/usr/share/nginx/html/config.js
+    
+    ports:
+      - "4200:80"
+
+    environment:
+      - NODE_OPTIONS=--openssl-legacy-provider
+      - GOOGLE_CLIENT_ID={{ google_client_id }}
+      - GOOGLE_CLIENT_ID_MANAGER={{ google_client_id_manager }}
+
+    networks:
+      - frontend-network
+    
+    restart: unless-stopped
+
+networks:
+  frontend-network:
+    driver: bridge

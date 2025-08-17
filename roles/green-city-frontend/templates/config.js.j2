@@ -1,0 +1,7 @@
+// templates/config.js.j2
+window._env_ = {
+  backendCoreUrl: "http://{{ hostvars[groups['backend'][0]].backend_ip }}:8080/",
+  backendUserUrl: "http://{{ hostvars[groups['backend'][0]].backend_ip }}:8060/",
+  frontendUrl: "http://{{ hostvars[groups['frontend'][0]].frontend_ip }}:4200/",
+  socketUrl: "http://{{ hostvars[groups['backend'][0]].backend_ip }}:8080/socket"
+};

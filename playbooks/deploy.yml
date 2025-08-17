@@ -1,0 +1,116 @@
+---
+# playbooks/deploy.yml
+
+- name: Deploy frontend
+  hosts: frontend
+  become: yes
+
+  vars:
+    # Получаем секреты из Vault
+    aws_creds: >-
+      {{
+        lookup('hashi_vault',
+          'secret=secret/data/ansible/aws ' +
+          'token=' + lookup('env', 'VAULT_TOKEN') + ' ' +
+          'url=' + lookup('env', 'VAULT_ADDR') + ' ' +
+          'engine_version=2'
+        )
+      }}
+
+    # Распаковываем нужные переменные
+    aws_region: "{{ aws_creds.AWS_REGION }}"
+    ecr_account: "{{ aws_creds.ECR_ACCOUNT }}"
+    aws_access_key_id: "{{ aws_creds.AWS_ACCESS_KEY_ID }}"
+    aws_secret_access_key: "{{ aws_creds.AWS_SECRET_ACCESS_KEY }}"
+
+    app_creds: >-
+      {{
+        lookup('hashi_vault',
+          'secret=secret/data/ansible/app ' +
+          'token=' + lookup('env', 'VAULT_TOKEN') + ' ' +
+          'url=' + lookup('env', 'VAULT_ADDR') + ' ' +
+          'engine_version=2'
+        )
+      }}
+
+    # Распаковываем нужные переменные
+    google_client_id: "{{ app_creds.GOOGLE_CLIENT_ID }}"
+    google_client_id_manager: "{{ app_creds.GOOGLE_CLIENT_ID_MANAGER }}"
+
+  roles:
+    - green-city-frontend
+
+
+
+
+- name: Deploy backend
+  hosts: backend
+  become: yes
+
+  vars:
+    # Получаем секреты из Vault
+    aws_creds: >-
+      {{
+        lookup('hashi_vault',
+          'secret=secret/data/ansible/aws ' +
+          'token=' + lookup('env', 'VAULT_TOKEN') + ' ' +
+          'url=' + lookup('env', 'VAULT_ADDR') + ' ' +
+          'engine_version=2'
+        )
+      }}
+
+    # Распаковываем нужные переменные
+    aws_region: "{{ aws_creds.AWS_REGION }}"
+    ecr_account: "{{ aws_creds.ECR_ACCOUNT }}"
+    aws_access_key_id: "{{ aws_creds.AWS_ACCESS_KEY_ID }}"
+    aws_secret_access_key: "{{ aws_creds.AWS_SECRET_ACCESS_KEY }}"
+
+    app_creds: >-
+      {{
+        lookup('hashi_vault',
+          'secret=secret/data/ansible/app ' +
+          'token=' + lookup('env', 'VAULT_TOKEN') + ' ' +
+          'url=' + lookup('env', 'VAULT_ADDR') + ' ' +
+          'engine_version=2'
+        )
+      }}
+
+    # Распаковываем нужные переменные
+    google_client_id: "{{ app_creds.GOOGLE_CLIENT_ID }}"
+    google_client_id_manager: "{{ app_creds.GOOGLE_CLIENT_ID_MANAGER }}"
+    google_api_key: "{{ app_creds.GOOGLE_API_KEY }}"
+    cloud_name: "{{ app_creds.CLOUD_NAME }}"
+    api_key: "{{ app_creds.API_KEY }}"
+    api_secret: "{{ app_creds.API_SECRET }}"
+    azure_connection_string: "{{ app_creds.AZURE_CONNECTION_STRING }}"
+    azure_container_name: "{{ app_creds.AZURE_CONTAINER_NAME }}"
+    max_file_size: "{{ app_creds.MAX_FILE_SIZE }}"
+    max_request_size: "{{ app_creds.MAX_REQUEST_SIZE }}"
+    bucket_name: "{{ app_creds.BUCKET_NAME }}"
+    static_url: "{{ app_creds.STATIC_URL }}"
+    default_profile_picture: "{{ app_creds.DEFAULT_PROFILE_PICTURE }}"
+    chat_link: "{{ app_creds.CHAT_LINK }}"
+    profile: "{{ app_creds.PROFILE }}"
+    google_application_credentials: "{{ app_creds.GOOGLE_APPLICATION_CREDENTIALS }}"
+
+
+    rds_creds: >-
+      {{
+        lookup('hashi_vault',
+          'secret=secret/data/ansible/rds ' +
+          'token=' + lookup('env', 'VAULT_TOKEN') + ' ' +
+          'url=' + lookup('env', 'VAULT_ADDR') + ' ' +
+          'engine_version=2'
+        )
+      }}
+
+    # Распаковываем нужные переменные
+
+    datasource_url: "{{ rds_creds.DATASOURCE_URL }}"
+    rds_user: "{{ rds_creds.DATASOURCE_USER }}"
+    rds_password: "{{ rds_creds.DATASOURCE_PASSWORD }}"
+    email_address: "{{ rds_creds.EMAIL_ADDRESS }}"
+    email_password: "{{ rds_creds.EMAIL_PASSWORD }}"
+
+  roles:
+    - green-city-backend

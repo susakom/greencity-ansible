@@ -1,0 +1,56 @@
+# templates/docker-compose-backend.yml.j2
+version: '3'
+
+networks:
+  green-city-net:
+    driver: bridge
+    name: green-city-network
+
+services:
+  backcore:
+    image: "{{ ecr_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/greencity-backcore:{{ ecr_tags.image_tag_backcore }}"
+    container_name: gc-backcore
+    ports:
+      - "8080:8080"
+    environment:
+      - DATASOURCE_URL={{ datasource_url }}
+      - DATASOURCE_USERNAME={{ rds_user }}
+      - DATASOURCE_PASSWORD={{ rds_password }}
+      - GOOGLE_CLIENT_ID={{ google_client_id }}
+      - GOOGLE_API_KEY={{ google_api_key }}
+      - CLOUD_NAME={{ cloud_name }}
+      - API_KEY={{ api_key }}
+      - API_SECRET={{ api_secret }}
+      - AZURE_CONNECTION_STRING={{ azure_connection_string }}
+      - AZURE_CONTAINER_NAME={{ azure_container_name }}
+      - MAX_FILE_SIZE={{ max_file_size }}
+      - MAX_REQUEST_SIZE={{ max_request_size }}
+      - BUCKET_NAME={{ bucket_name }}
+      - STATIC_URL={{ static_url }}
+      - DEFAULT_PROFILE_PICTURE={{ default_profile_picture }}
+      - CHAT_LINK={{ chat_link }}
+      - PROFILE={{ profile }}
+      - GOOGLE_APPLICATION_CREDENTIALS={{ google_application_credentials }}
+      - CLIENT_APP_URL="http://{{ hostvars[groups['frontend'][0]].frontend_ip }}:4200/"
+        
+
+    networks:
+      - green-city-net
+    restart: unless-stopped
+
+  backuser:
+    image: "{{ ecr_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/greencity-backuser:{{ ecr_tags.image_tag_backuser }}"
+    container_name: gc-backuser
+    ports:
+      - "8060:8060"
+    environment:
+      - DATASOURCE_URL={{ datasource_url }}
+      - DATASOURCE_USER={{ rds_user }}
+      - DATASOURCE_PASSWORD={{ rds_password }}
+      - EMAIL_ADDRESS={{ email_address }}
+      - EMAIL_PASSWORD={{ email_password }}
+      - GOOGLE_CLIENT_ID={{ google_client_id }}
+      - CLIENT_APP_URL="http://{{ hostvars[groups['frontend'][0]].frontend_ip }}:4200/"
+    networks:
+      - green-city-net
+    restart: unless-stopped
