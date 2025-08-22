@@ -1,0 +1,30 @@
+---
+- name: 🛠 Установить стек мониторинга
+  hosts: monitoring
+  become: yes
+  vars:
+
+    # Получаем секреты из Vault
+    aws_creds: >-
+      {{
+        lookup('hashi_vault',
+          'secret=secret/data/ansible/aws ' +
+          'token=' + lookup('env', 'VAULT_TOKEN') + ' ' +
+          'url=' + lookup('env', 'VAULT_ADDR') + ' ' +
+          'engine_version=2'
+        )
+      }}
+
+    # Распаковываем нужные переменные
+    aws_region: "{{ aws_creds.AWS_REGION }}"
+    ecr_account: "{{ aws_creds.ECR_ACCOUNT }}"
+    aws_access_key_id: "{{ aws_creds.AWS_ACCESS_KEY_ID }}"
+    aws_secret_access_key: "{{ aws_creds.AWS_SECRET_ACCESS_KEY }}"
+
+
+
+    # Передаём IP других машин через inventory
+    backend_ip: "{{ hostvars[groups['backend'][0]].backend_ip }}"
+    frontend_ip: "{{ hostvars[groups['frontend'][0]].frontend_ip }}"
+  roles:
+    - monitoring

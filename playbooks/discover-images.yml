@@ -35,7 +35,7 @@
           --query 'imageDetails[?imageTags != `null`].{Tags: imageTags, Pushed: imagePushedAt}' \
           --output json
       register: ecr_frontend_raw
-      no_log: true
+#      no_log: true
 
     - name: Получить образы backcore
       shell: |
@@ -45,7 +45,7 @@
           --query 'imageDetails[?imageTags != `null`].{Tags: imageTags, Pushed: imagePushedAt}' \
           --output json
       register: ecr_backcore_raw
-      no_log: true
+ #     no_log: true
 
     - name: Получить образы backuser
       shell: |
@@ -55,7 +55,7 @@
           --query 'imageDetails[?imageTags != `null`].{Tags: imageTags, Pushed: imagePushedAt}' \
           --output json
       register: ecr_backuser_raw
-      no_log: true
+  #    no_log: true
 
     - name: 🏷️звлечь и отсортировать (frontend)
       set_fact:

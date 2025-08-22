@@ -1,0 +1,37 @@
+---
+- name: 📂 Создать папку для мониторинга
+  file:
+    path: /home/ubuntu/monitoring
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+
+- name: 📂 Создать папку для Prometheus
+  file:
+    path: /home/ubuntu/monitoring/prometheus
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: 📂 Копировать docker-compose.yml
+  template:
+    src: templates/docker-compose-monitoring.yml.j2
+    dest: /home/ubuntu/monitoring/docker-compose.yml
+    owner: ubuntu
+    mode: '0644'
+
+- name: 📂 Копировать prometheus.yml
+  template:
+    src: templates/prometheus.yml.j2
+    dest: /home/ubuntu/monitoring/prometheus/prometheus.yml
+    owner: ubuntu
+    mode: '0644'
+
+- name: 🐳 Запустить стек мониторинга
+  command: docker-compose up -d
+  args:
+    chdir: /home/ubuntu/monitoring
+  become_user: ubuntu
