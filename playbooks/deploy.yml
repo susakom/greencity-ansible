@@ -6,7 +6,7 @@
   become: yes
 
   vars:
-    # Получаем секреты из Vault
+    # Get secrets from Vault
     aws_creds: >-
       {{
         lookup('hashi_vault',
@@ -17,7 +17,7 @@
         )
       }}
 
-    # Распаковываем нужные переменные
+    # Unpack required variables
     aws_region: "{{ aws_creds.AWS_REGION }}"
     ecr_account: "{{ aws_creds.ECR_ACCOUNT }}"
     aws_access_key_id: "{{ aws_creds.AWS_ACCESS_KEY_ID }}"
@@ -33,7 +33,7 @@
         )
       }}
 
-    # Распаковываем нужные переменные
+    # Unpack required variables
     google_client_id: "{{ app_creds.GOOGLE_CLIENT_ID }}"
     google_client_id_manager: "{{ app_creds.GOOGLE_CLIENT_ID_MANAGER }}"
 
@@ -48,7 +48,7 @@
   become: yes
 
   vars:
-    # Получаем секреты из Vault
+    # Get secrets from Vault
     aws_creds: >-
       {{
         lookup('hashi_vault',
@@ -59,7 +59,7 @@
         )
       }}
 
-    # Распаковываем нужные переменные
+    # Unpack required variables
     aws_region: "{{ aws_creds.AWS_REGION }}"
     ecr_account: "{{ aws_creds.ECR_ACCOUNT }}"
     aws_access_key_id: "{{ aws_creds.AWS_ACCESS_KEY_ID }}"
@@ -75,7 +75,7 @@
         )
       }}
 
-    # Распаковываем нужные переменные
+    # Unpack required variables
     google_client_id: "{{ app_creds.GOOGLE_CLIENT_ID }}"
     google_client_id_manager: "{{ app_creds.GOOGLE_CLIENT_ID_MANAGER }}"
     google_api_key: "{{ app_creds.GOOGLE_API_KEY }}"
@@ -104,7 +104,7 @@
         )
       }}
 
-    # Распаковываем нужные переменные
+    # Unpack required variables
 
     datasource_url: "{{ rds_creds.DATASOURCE_URL }}"
     rds_user: "{{ rds_creds.DATASOURCE_USER }}"
