@@ -1,10 +1,10 @@
 ---
-- name: 🛠 Установить стек мониторинга
+- name: Deploy monitoring stack
   hosts: monitoring
   become: yes
   vars:
 
-    # Получаем секреты из Vault
+    # Get secrets from Vault
     aws_creds: >-
       {{
         lookup('hashi_vault',
@@ -15,7 +15,7 @@
         )
       }}
 
-    # Распаковываем нужные переменные
+    # Unpack required variables
     aws_region: "{{ aws_creds.AWS_REGION }}"
     ecr_account: "{{ aws_creds.ECR_ACCOUNT }}"
     aws_access_key_id: "{{ aws_creds.AWS_ACCESS_KEY_ID }}"
@@ -23,7 +23,7 @@
 
 
 
-    # Передаём IP других машин через inventory
+    # Pass IP of other machines via inventory file
     backend_ip: "{{ hostvars[groups['backend'][0]].backend_ip }}"
     frontend_ip: "{{ hostvars[groups['frontend'][0]].frontend_ip }}"
   roles:
