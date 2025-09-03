@@ -1,19 +1,19 @@
-# === Временные файлы и кэш ===
+
 *.tmp
 /tmp/
 *.log
 
-# === Ansible runtime ===
+
 .retry
 .cache/
 ansible.log
 
-# === Результаты работы ===
+
 inventory.ini
 ecr_tags.json
 /tmp/ecr_tags.json
 
-# === VS Code / редакторы ===
+
 .vscode/
 *.swp
 *.swo
