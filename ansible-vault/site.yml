@@ -1,4 +1,3 @@
-
 - name: Check connection to Hashicorp Vault
   hosts: localhost
   gather_facts: no
@@ -6,7 +5,7 @@
     VAULT_ADDR: "http://127.0.0.1:8200"
 
   vars:
-    # Получаем ВЕСЬ секрет из Vault
+    # Retrieve the entire secret from Vault
     aws_secrets: >-
       {{
         lookup('hashi_vault',
@@ -18,21 +17,20 @@
       }}
 
     aws_region: "{{ aws_secrets.AWS_REGION }}"
-    ecr_account: "{{ aws_secrets.ECR.ACCOUNT }}"
+    ecr_account: "{{ aws_secrets.ECR_ACCOUNT }}"  # Corrected key
 
   tasks:
-     - name: 🗂 Разложить секреты в алиасы
-       set_fact:
-         aws_region: "{{ aws_secrets.AWS_REGION }}"
-         ecr_account: "{{ aws_secrets.ECR_ACCOUNT }}"
+    - name: 🗂 Set secret values as aliases
+      set_fact:
+        aws_region: "{{ aws_secrets.AWS_REGION }}"
+        ecr_account: "{{ aws_secrets.ECR_ACCOUNT }}"
 
-     - name: ✅ Проверим переменные
-       debug:
+    - name: ✅ Show variable values
+      debug:
+        msg: "Region={{ aws_region }}, Account={{ ecr_account }}"
 
-         msg: "Region={{ aws_region }}, Account={{ ecr_account }}"
-     - name: ✅ Проверим, что EC2 видит переменные
-       command: printenv
-       environment:
-         AWS_REGION: "{{ aws_region }}"
-         ECR_ACCOUNT: "{{ ecr_account }}"
-
+    - name: ✅ Verify EC2 can access environment variables
+      command: printenv
+      environment:
+        AWS_REGION: "{{ aws_region }}"
+        ECR_ACCOUNT: "{{ ecr_account }}"
